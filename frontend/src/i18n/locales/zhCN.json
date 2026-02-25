@@ -124,6 +124,12 @@
     "uninstallDeprecated": "卸载已弃用的包 \"{{name}}\"",
     "untap": "Untap \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "按需安装 ({{count}})",
+    "asDependency": "作为依赖 ({{count}})",
+    "toggleOnRequest": "切换筛选：按需安装",
+    "toggleAsDependency": "切换筛选：作为依赖安装"
+  },
   "multiSelect": {
     "selectedCount": "已选 {{count}}/{{total}}"
   },

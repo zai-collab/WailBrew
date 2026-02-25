@@ -124,6 +124,12 @@
     "uninstallDeprecated": "지원 중단된 Formula \"{{name}}\" 제거",
     "untap": "Untap \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "요청 설치 ({{count}})",
+    "asDependency": "의존성 설치 ({{count}})",
+    "toggleOnRequest": "필터 전환: 요청으로 설치됨",
+    "toggleAsDependency": "필터 전환: 의존성으로 설치됨"
+  },
   "multiSelect": {
     "selectedCount": "{{total}}개 중 {{count}}개 선택됨"
   },

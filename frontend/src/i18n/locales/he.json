@@ -124,6 +124,12 @@
     "uninstallDeprecated": "הסר נוסחה שהוצאה משימוש \"{{name}}\"",
     "untap": "Untap \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "לפי בקשה ({{count}})",
+    "asDependency": "כתלות ({{count}})",
+    "toggleOnRequest": "החלף מסנן: הותקן לפי בקשה",
+    "toggleAsDependency": "החלף מסנן: הותקן כתלות"
+  },
   "multiSelect": {
     "selectedCount": "{{count}} מתוך {{total}} נבחרו"
   },

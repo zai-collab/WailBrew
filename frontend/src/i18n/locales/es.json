@@ -124,6 +124,12 @@
     "uninstallDeprecated": "Desinstalar formula en desuso \"{{name}}\"",
     "untap": "Remover \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "Por petición ({{count}})",
+    "asDependency": "Como dependencia ({{count}})",
+    "toggleOnRequest": "Alternar filtro: instalado por petición",
+    "toggleAsDependency": "Alternar filtro: instalado como dependencia"
+  },
   "multiSelect": {
     "selectedCount": "{{count}} de {{total}} seleccionados"
   },

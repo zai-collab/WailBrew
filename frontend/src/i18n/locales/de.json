@@ -124,6 +124,12 @@
     "uninstallDeprecated": "Veraltete Formel \"{{name}}\" deinstallieren",
     "untap": "Untap \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "Auf Anfrage ({{count}})",
+    "asDependency": "Als Abhängigkeit ({{count}})",
+    "toggleOnRequest": "Filter umschalten: auf Anfrage installiert",
+    "toggleAsDependency": "Filter umschalten: als Abhängigkeit installiert"
+  },
   "multiSelect": {
     "selectedCount": "{{count}} von {{total}} ausgewählt"
   },

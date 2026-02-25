@@ -1822,6 +1822,37 @@ body {
   transform: translateY(-1px);
 }
 
+.installed-filter-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -2px 0 10px 0;
+}
+
+.installed-filter-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 0.22rem 0.62rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.installed-filter-pill:hover {
+  border-color: var(--glass-border-strong);
+  color: var(--text-main);
+}
+
+.installed-filter-pill.active {
+  background: rgba(76, 175, 80, 0.14);
+  border-color: rgba(76, 175, 80, 0.45);
+  color: #7bcf83;
+}
+
 .confirm-overlay {
   position: fixed;
   top: 0;

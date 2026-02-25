@@ -124,6 +124,12 @@
     "uninstallDeprecated": "解除安裝已棄用的套件 \"{{name}}\"",
     "untap": "Untap \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "按需安裝 ({{count}})",
+    "asDependency": "作為相依套件 ({{count}})",
+    "toggleOnRequest": "切換篩選：按需安裝",
+    "toggleAsDependency": "切換篩選：作為相依套件安裝"
+  },
   "multiSelect": {
     "selectedCount": "已選 {{count}}/{{total}}"
   },

@@ -97,6 +97,7 @@ func (s *ListService) GetBrewPackages() [][]string {
 	lines := strings.Split(outputStr, "\n")
 	var packageNames []string
 	packageVersions := make(map[string]string)
+	installReasonByName := make(map[string]string)
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -114,11 +115,44 @@ func (s *ListService) GetBrewPackages() [][]string {
 		}
 	}
 
+	// Resolve install origin (on request vs as dependency) from Homebrew JSON metadata.
+	infoOutput, infoErr := s.executor.Run("info", "--json=v2", "--formula", "--installed")
+	if infoErr == nil {
+		var info struct {
+			Formulae []struct {
+				Name      string `json:"name"`
+				Installed []struct {
+					InstalledOnRequest   bool `json:"installed_on_request"`
+					InstalledAsDependency bool `json:"installed_as_dependency"`
+				} `json:"installed"`
+			} `json:"formulae"`
+		}
+
+		if err := json.Unmarshal(infoOutput, &info); err == nil {
+			for _, f := range info.Formulae {
+				reason := "unknown"
+				if len(f.Installed) > 0 {
+					switch {
+					case f.Installed[0].InstalledOnRequest:
+						reason = "on_request"
+					case f.Installed[0].InstalledAsDependency:
+						reason = "dependency"
+					}
+				}
+				installReasonByName[f.Name] = reason
+			}
+		}
+	}
+
 	// Build result with name, version, and empty size (lazy loaded)
 	var packages [][]string
 	for _, name := range packageNames {
 		version := packageVersions[name]
-		packages = append(packages, []string{name, version, ""})
+		reason := installReasonByName[name]
+		if reason == "" {
+			reason = "unknown"
+		}
+		packages = append(packages, []string{name, version, "", reason})
 	}
 
 	return packages

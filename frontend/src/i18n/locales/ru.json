@@ -124,6 +124,12 @@
     "uninstallDeprecated": "Удалить устаревший пакет \"{{name}}\"",
     "untap": "Untap \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "Установлено вручную ({{count}})",
+    "asDependency": "Как зависимость ({{count}})",
+    "toggleOnRequest": "Переключить фильтр: установлено вручную",
+    "toggleAsDependency": "Переключить фильтр: установлено как зависимость"
+  },
   "multiSelect": {
     "selectedCount": "{{count}} из {{total}} выбрано"
   },

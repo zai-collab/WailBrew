@@ -124,6 +124,12 @@
     "uninstallDeprecated": "Uninstall deprecated formula \"{{name}}\"",
     "untap": "Untap \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "On Request ({{count}})",
+    "asDependency": "As Dependency ({{count}})",
+    "toggleOnRequest": "Toggle filter: installed on request",
+    "toggleAsDependency": "Toggle filter: installed as dependency"
+  },
   "multiSelect": {
     "selectedCount": "{{count}} of {{total}} selected"
   },

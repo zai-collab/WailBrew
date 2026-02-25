@@ -65,6 +65,7 @@ import { mapToSupportedLanguage } from "./i18n/languageUtils";
 interface PackageEntry {
     name: string;
     installedVersion: string;
+    installReason?: "on_request" | "dependency" | "unknown";
     latestVersion?: string;
     size?: string;
     desc?: string;
@@ -133,6 +134,7 @@ const WailBrewApp = () => {
     const [deprecatedFormulae, setDeprecatedFormulae] = useState<string[]>([]);
     const [selectedDeprecatedPackage, setSelectedDeprecatedPackage] = useState<PackageEntry | null>(null);
     const [updatableError, setUpdatableError] = useState<string>("");
+    const [installedFilter, setInstalledFilter] = useState<"all" | "on_request" | "dependency">("all");
     const [homebrewLog, setHomebrewLog] = useState<string>("");
     const [homebrewVersion, setHomebrewVersion] = useState<string>("");
     const [homebrewUpdateStatus, setHomebrewUpdateStatus] = useState<{ isUpToDate: boolean | null, latestVersion: string | null }>({ isUpToDate: null, latestVersion: null });
@@ -237,10 +239,11 @@ const WailBrewApp = () => {
                     throw new Error(`${t('errors.failedRepositories')}: ${safeRepos[0][1]}`);
                 }
 
-                const installedFormatted = safeInstalled.map(([name, installedVersion, size]) => ({
+                const installedFormatted = safeInstalled.map(([name, installedVersion, size, installReason]) => ({
                     name,
                     installedVersion,
                     size,
+                    installReason: (installReason as "on_request" | "dependency" | "unknown") || "unknown",
                     isInstalled: true,
                 }));
                 const casksFormatted = safeInstalledCasks.map(([name, installedVersion, size]) => ({
@@ -1084,13 +1087,22 @@ const WailBrewApp = () => {
     const activePackages = getActivePackages();
     const activeRepositories = getActiveRepositories();
 
-    const filteredPackages = activePackages.filter((pkg) =>
+    const installedFilteredPackages = view === "installed"
+        ? activePackages.filter((pkg) => {
+            if (installedFilter === "all") return true;
+            return pkg.installReason === installedFilter;
+        })
+        : activePackages;
+
+    const filteredPackages = installedFilteredPackages.filter((pkg) =>
         pkg.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const filteredRepositories = activeRepositories.filter((repo) =>
         repo.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    const installedOnRequestCount = packages.filter(pkg => pkg.installReason === "on_request").length;
+    const installedDependencyCount = packages.filter(pkg => pkg.installReason === "dependency").length;
 
     const handleSelect = async (pkg: PackageEntry) => {
         setSelectedPackage(pkg);
@@ -2006,10 +2018,11 @@ const WailBrewApp = () => {
                 setError(safeInstalled[0][1]);
                 setPackages([]);
             } else {
-                const formatted = safeInstalled.map(([name, installedVersion, size]) => ({
+                const formatted = safeInstalled.map(([name, installedVersion, size, installReason]) => ({
                     name,
                     installedVersion,
                     size,
+                    installReason: (installReason as "on_request" | "dependency" | "unknown") || "unknown",
                     isInstalled: true,
                 }));
                 setPackages(formatted);
@@ -2178,19 +2191,37 @@ const WailBrewApp = () => {
                         <HeaderRow
                             title={t('headers.installedFormulas', { count: packages.length })}
                             actions={
-                                <button
-                                    className="refresh-button"
-                                    onClick={handleRefreshPackages}
-                                    disabled={loading}
-                                    title={t('buttons.refresh')}
-                                >
-                                    <RefreshCw size={18} />
-                                </button>
+                                <>
+                                    <button
+                                        className="refresh-button"
+                                        onClick={handleRefreshPackages}
+                                        disabled={loading}
+                                        title={t('buttons.refresh')}
+                                    >
+                                        <RefreshCw size={18} />
+                                    </button>
+                                </>
                             }
                             searchQuery={searchQuery}
                             onSearchChange={setSearchQuery}
                             onClearSearch={() => setSearchQuery("")}
                         />
+                        <div className="installed-filter-pills-row">
+                            <button
+                                className={`installed-filter-pill ${installedFilter === "on_request" ? "active" : ""}`}
+                                onClick={() => setInstalledFilter(prev => prev === "on_request" ? "all" : "on_request")}
+                                title={t('filters.toggleOnRequest')}
+                            >
+                                {t('filters.onRequest', { count: installedOnRequestCount })}
+                            </button>
+                            <button
+                                className={`installed-filter-pill ${installedFilter === "dependency" ? "active" : ""}`}
+                                onClick={() => setInstalledFilter(prev => prev === "dependency" ? "all" : "dependency")}
+                                title={t('filters.toggleAsDependency')}
+                            >
+                                {t('filters.asDependency', { count: installedDependencyCount })}
+                            </button>
+                        </div>
                         {error && <div className="result error">{error}</div>}
                         <PackageTable
                             ref={view === "installed" ? packageTableRef : null}
@@ -2235,7 +2266,7 @@ const WailBrewApp = () => {
                             onSearchChange={setSearchQuery}
                             onClearSearch={() => setSearchQuery("")}
                         />
-                        {updatableError && <div className="result error">{updatableError}</div>}
+                        {error && <div className="result error">{error}</div>}
                         <PackageTable
                             ref={view === "casks" ? packageTableRef : null}
                             packages={filteredPackages}

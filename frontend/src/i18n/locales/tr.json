@@ -124,6 +124,12 @@
     "uninstallDeprecated": "Kullanımdan kaldırılan formül \"{{name}}\" kaldır",
     "untap": "Untap \"{{name}}\""
   },
+  "filters": {
+    "onRequest": "İstekle kurulan ({{count}})",
+    "asDependency": "Bağımlılık olarak ({{count}})",
+    "toggleOnRequest": "Filtreyi değiştir: istekle kurulanlar",
+    "toggleAsDependency": "Filtreyi değiştir: bağımlılık olarak kurulanlar"
+  },
   "multiSelect": {
     "selectedCount": "{{total}} içinden {{count}} seçildi"
   },
