@@ -120,6 +120,7 @@ const WailBrewApp = () => {
     const [tapLogs, setTapLogs] = useState<string | null>(null);
     const [tappingRepository, setTappingRepository] = useState<string | null>(null);
     const [infoLogs, setInfoLogs] = useState<string | null>(null);
+    const [isInfoRunning, setIsInfoRunning] = useState<boolean>(false);
     const [repositoryInfoLogs, setRepositoryInfoLogs] = useState<string | null>(null);
     const [showRepositoryInfo, setShowRepositoryInfo] = useState<boolean>(false);
     const [showCommandPalette, setShowCommandPalette] = useState<boolean>(false);
@@ -1190,15 +1191,16 @@ const WailBrewApp = () => {
 
     const handleRemoveConfirmed = async () => {
         if (!selectedPackage) return;
+        const packageName = selectedPackage.name;
         setShowConfirm(false);
-        setUninstallLogs(t('dialogs.uninstalling', { name: selectedPackage.name }));
+        setUninstallLogs(t('dialogs.uninstalling', { name: packageName }));
         setIsUninstallRunning(true);
 
         // Set up event listeners for live progress
         const progressListener = EventsOn("packageUninstallProgress", (progress: string) => {
             setUninstallLogs(prevLogs => {
                 if (!prevLogs) {
-                    return `${t('dialogs.uninstallLogs', { name: selectedPackage.name })}\n${progress}`;
+                    return `${t('dialogs.uninstallLogs', { name: packageName })}\n${progress}`;
                 }
                 return prevLogs + '\n' + progress;
             });
@@ -1222,7 +1224,15 @@ const WailBrewApp = () => {
         });
 
         // Start the uninstall process
-        await RemoveBrewPackage(selectedPackage.name);
+        try {
+            await RemoveBrewPackage(packageName);
+        } catch (error) {
+            const errorMsg = `❌ Operation failed: ${String(error)}`;
+            setUninstallLogs(prev => prev ? `${prev}\n${errorMsg}` : errorMsg);
+            setIsUninstallRunning(false);
+            progressListener();
+            completeListener();
+        }
     };
 
     const handleUntapPackageClick = async (packageName: string) => {
@@ -1266,6 +1276,7 @@ const WailBrewApp = () => {
 
     const handleUpdateConfirmed = async () => {
         if (!selectedPackage) return;
+        const packageName = selectedPackage.name;
         
         // Clean up any existing listeners first (prevents duplicate listeners bug)
         if (updateListenersRef.current.progress) updateListenersRef.current.progress();
@@ -1273,14 +1284,14 @@ const WailBrewApp = () => {
         
         setShowUpdateConfirm(false);
         setIsUpdateAllOperation(false);
-        setUpdateLogs(t('dialogs.updating', { name: selectedPackage.name }));
+        setUpdateLogs(t('dialogs.updating', { name: packageName }));
         setIsUpdateRunning(true);
 
         // Set up event listeners for live progress
         const progressListener = EventsOn("packageUpdateProgress", (progress: string) => {
             setUpdateLogs(prevLogs => {
                 if (!prevLogs) {
-                    return `${t('dialogs.updateLogs', { name: selectedPackage.name })}\n${progress}`;
+                    return `${t('dialogs.updateLogs', { name: packageName })}\n${progress}`;
                 }
                 return prevLogs + '\n' + progress;
             });
@@ -1312,7 +1323,16 @@ const WailBrewApp = () => {
         updateListenersRef.current = { progress: progressListener, complete: completeListener };
 
         // Start the update process
-        await UpdateBrewPackage(selectedPackage.name);
+        try {
+            await UpdateBrewPackage(packageName);
+        } catch (error) {
+            const errorMsg = `❌ Operation failed: ${String(error)}`;
+            setUpdateLogs(prev => prev ? `${prev}\n${errorMsg}` : errorMsg);
+            setIsUpdateRunning(false);
+            updateListenersRef.current.progress?.();
+            updateListenersRef.current.complete?.();
+            updateListenersRef.current = { progress: null, complete: null };
+        }
     };
 
     const handleUpdateAllConfirmed = async () => {
@@ -1362,7 +1382,17 @@ const WailBrewApp = () => {
         updateListenersRef.current = { progress: progressListener, complete: completeListener };
 
         // Start the update all process
-        await UpdateAllBrewPackages();
+        try {
+            await UpdateAllBrewPackages();
+        } catch (error) {
+            const errorMsg = `❌ Operation failed: ${String(error)}`;
+            setUpdateLogs(prev => prev ? `${prev}\n${errorMsg}` : errorMsg);
+            setIsUpdateRunning(false);
+            setCurrentlyUpdatingPackage(null);
+            updateListenersRef.current.progress?.();
+            updateListenersRef.current.complete?.();
+            updateListenersRef.current = { progress: null, complete: null };
+        }
     };
 
     const handleShowInfoLogs = async (pkg: PackageEntry) => {
@@ -1372,13 +1402,21 @@ const WailBrewApp = () => {
         const currentRequestId = ++infoRequestIdRef.current;
 
         setInfoPackage(pkg);
+        setIsInfoRunning(true);
         setInfoLogs(t('dialogs.gettingInfo', { name: pkg.name }));
 
-        const info = await GetBrewPackageInfo(pkg.name);
-
-        // Only update if this request is still the current one (dialog wasn't closed)
-        if (currentRequestId === infoRequestIdRef.current) {
-            setInfoLogs(info);
+        try {
+            const info = await GetBrewPackageInfo(pkg.name);
+            // Only update if this request is still the current one (dialog wasn't closed)
+            if (currentRequestId === infoRequestIdRef.current) {
+                setInfoLogs(info);
+                setIsInfoRunning(false);
+            }
+        } catch (error) {
+            if (currentRequestId === infoRequestIdRef.current) {
+                setInfoLogs(`❌ Failed to load package info: ${String(error)}`);
+                setIsInfoRunning(false);
+            }
         }
     };
 
@@ -1458,7 +1496,16 @@ const WailBrewApp = () => {
         updateListenersRef.current = { progress: progressListener, complete: completeListener };
 
         // Start the update process for selected packages
-        await UpdateSelectedBrewPackages(packageNames);
+        try {
+            await UpdateSelectedBrewPackages(packageNames);
+        } catch (error) {
+            const errorMsg = `❌ Operation failed: ${String(error)}`;
+            setUpdateLogs(prev => prev ? `${prev}\n${errorMsg}` : errorMsg);
+            setIsUpdateRunning(false);
+            updateListenersRef.current.progress?.();
+            updateListenersRef.current.complete?.();
+            updateListenersRef.current = { progress: null, complete: null };
+        }
     };
 
     // Helper for clearing selection and closing contextual dialogs
@@ -1792,15 +1839,16 @@ const WailBrewApp = () => {
 
     const handleInstallConfirmed = async () => {
         if (!selectedPackage) return;
+        const packageName = selectedPackage.name;
         setShowInstallConfirm(false);
-        setInstallLogs(t('dialogs.installing', { name: selectedPackage.name }));
+        setInstallLogs(t('dialogs.installing', { name: packageName }));
         setIsInstallRunning(true);
 
         // Set up event listeners for live progress
         const progressListener = EventsOn("packageInstallProgress", (progress: string) => {
             setInstallLogs(prevLogs => {
                 if (!prevLogs) {
-                    return `${t('dialogs.installLogs', { name: selectedPackage.name })}\n${progress}`;
+                    return `${t('dialogs.installLogs', { name: packageName })}\n${progress}`;
                 }
                 return prevLogs + '\n' + progress;
             });
@@ -1818,7 +1866,15 @@ const WailBrewApp = () => {
         });
 
         // Start the install process
-        await InstallBrewPackage(selectedPackage.name);
+        try {
+            await InstallBrewPackage(packageName);
+        } catch (error) {
+            const errorMsg = `❌ Operation failed: ${String(error)}`;
+            setInstallLogs(prev => prev ? `${prev}\n${errorMsg}` : errorMsg);
+            setIsInstallRunning(false);
+            progressListener();
+            completeListener();
+        }
     };
 
     const handleShowPackageInfo = (pkg: PackageEntry) => {
@@ -2692,11 +2748,13 @@ const WailBrewApp = () => {
                     open={!!infoLogs}
                     title={t('dialogs.packageInfo', { name: infoPackage?.name })}
                     log={infoLogs}
+                    isRunning={isInfoRunning}
                     onClose={() => {
                         // Invalidate any pending info request (prevents dialog from reopening)
                         infoRequestIdRef.current++;
                         setInfoLogs(null);
                         setInfoPackage(null);
+                        setIsInfoRunning(false);
                     }}
                 />
                 <LogDialog

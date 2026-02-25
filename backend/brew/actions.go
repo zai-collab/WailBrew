@@ -66,6 +66,7 @@ func (s *ActionsService) InstallBrewPackage(ctx context.Context, packageName str
 	if err != nil {
 		errorMsg := s.getBackendMsg("errorCreatingPipe", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageInstallProgress", errorMsg)
+		s.eventEmitter.Emit("packageInstallComplete", errorMsg)
 		return errorMsg
 	}
 
@@ -73,6 +74,7 @@ func (s *ActionsService) InstallBrewPackage(ctx context.Context, packageName str
 	if err != nil {
 		errorMsg := s.getBackendMsg("errorCreatingErrorPipe", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageInstallProgress", errorMsg)
+		s.eventEmitter.Emit("packageInstallComplete", errorMsg)
 		return errorMsg
 	}
 
@@ -80,6 +82,7 @@ func (s *ActionsService) InstallBrewPackage(ctx context.Context, packageName str
 	if err := cmd.Start(); err != nil {
 		errorMsg := s.getBackendMsg("errorStartingInstall", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageInstallProgress", errorMsg)
+		s.eventEmitter.Emit("packageInstallComplete", errorMsg)
 		return errorMsg
 	}
 
@@ -134,6 +137,7 @@ func (s *ActionsService) RemoveBrewPackage(ctx context.Context, packageName stri
 	if err != nil {
 		errorMsg := s.getBackendMsg("errorCreatingPipe", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageUninstallProgress", errorMsg)
+		s.eventEmitter.Emit("packageUninstallComplete", errorMsg)
 		return errorMsg
 	}
 
@@ -141,6 +145,7 @@ func (s *ActionsService) RemoveBrewPackage(ctx context.Context, packageName stri
 	if err != nil {
 		errorMsg := s.getBackendMsg("errorCreatingErrorPipe", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageUninstallProgress", errorMsg)
+		s.eventEmitter.Emit("packageUninstallComplete", errorMsg)
 		return errorMsg
 	}
 
@@ -148,6 +153,7 @@ func (s *ActionsService) RemoveBrewPackage(ctx context.Context, packageName stri
 	if err := cmd.Start(); err != nil {
 		errorMsg := s.getBackendMsg("errorStartingUninstall", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageUninstallProgress", errorMsg)
+		s.eventEmitter.Emit("packageUninstallComplete", errorMsg)
 		return errorMsg
 	}
 
@@ -302,11 +308,17 @@ func (s *ActionsService) UpdateBrewPackage(ctx context.Context, packageName stri
 func (s *ActionsService) UpdateSelectedBrewPackages(ctx context.Context, packageNames []string) string {
 	// Validate brew installation first
 	if err := s.validateFunc(); err != nil {
-		return fmt.Sprintf("❌ Homebrew validation failed: %v", err)
+		msg := fmt.Sprintf("❌ Homebrew validation failed: %v", err)
+		s.eventEmitter.Emit("packageUpdateProgress", msg)
+		s.eventEmitter.Emit("packageUpdateComplete", msg)
+		return msg
 	}
 
 	if len(packageNames) == 0 {
-		return "❌ No packages selected for update"
+		msg := "❌ No packages selected for update"
+		s.eventEmitter.Emit("packageUpdateProgress", msg)
+		s.eventEmitter.Emit("packageUpdateComplete", msg)
+		return msg
 	}
 
 	// Build brew upgrade command with specific packages
@@ -318,16 +330,25 @@ func (s *ActionsService) UpdateSelectedBrewPackages(ctx context.Context, package
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Sprintf("❌ Error creating output pipe: %v", err)
+		msg := fmt.Sprintf("❌ Error creating output pipe: %v", err)
+		s.eventEmitter.Emit("packageUpdateProgress", msg)
+		s.eventEmitter.Emit("packageUpdateComplete", msg)
+		return msg
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return fmt.Sprintf("❌ Error creating error pipe: %v", err)
+		msg := fmt.Sprintf("❌ Error creating error pipe: %v", err)
+		s.eventEmitter.Emit("packageUpdateProgress", msg)
+		s.eventEmitter.Emit("packageUpdateComplete", msg)
+		return msg
 	}
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Sprintf("❌ Error starting update: %v", err)
+		msg := fmt.Sprintf("❌ Error starting update: %v", err)
+		s.eventEmitter.Emit("packageUpdateProgress", msg)
+		s.eventEmitter.Emit("packageUpdateComplete", msg)
+		return msg
 	}
 
 	// Track which packages were updated (especially wailbrew)
@@ -448,6 +469,7 @@ func (s *ActionsService) UpdateAllBrewPackages(ctx context.Context) string {
 	if err != nil {
 		errorMsg := s.getBackendMsg("errorCreatingPipe", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageUpdateProgress", errorMsg)
+		s.eventEmitter.Emit("packageUpdateComplete", errorMsg)
 		return errorMsg
 	}
 
@@ -455,6 +477,7 @@ func (s *ActionsService) UpdateAllBrewPackages(ctx context.Context) string {
 	if err != nil {
 		errorMsg := s.getBackendMsg("errorCreatingErrorPipe", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageUpdateProgress", errorMsg)
+		s.eventEmitter.Emit("packageUpdateComplete", errorMsg)
 		return errorMsg
 	}
 
@@ -462,6 +485,7 @@ func (s *ActionsService) UpdateAllBrewPackages(ctx context.Context) string {
 	if err := cmd.Start(); err != nil {
 		errorMsg := s.getBackendMsg("errorStartingUpdateAll", map[string]string{"error": err.Error()})
 		s.eventEmitter.Emit("packageUpdateProgress", errorMsg)
+		s.eventEmitter.Emit("packageUpdateComplete", errorMsg)
 		return errorMsg
 	}
 
